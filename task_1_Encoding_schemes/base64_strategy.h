@@ -4,12 +4,12 @@
 #include <string_view>
 #include <algorithm>
 
-// Define internals OUTSIDE the class to satisfy GCC 15 strictness
+// Define symbols
 namespace Base64Internals {
 constexpr std::string_view ALPHABET =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-// Use constexpr (not consteval) to allow more flexible evaluation ordering
+// Convert symbols: string -> int
 constexpr std::array<int, 256> generate_table() {
     std::array<int, 256> table;
     table.fill(-1);
@@ -22,7 +22,7 @@ constexpr std::array<int, 256> generate_table() {
 
 class Base64Strategy {
 public:
-    // Link to the external internals
+    // Initialize symbols' map
     static constexpr std::string_view ALPHABET = Base64Internals::ALPHABET;
     static constexpr std::array<int, 256> DECODE_TABLE = Base64Internals::generate_table();
 
@@ -57,7 +57,6 @@ public:
     }
 
     static bool is_valid_char(char c) {
-        // Explicit cast to avoid signed char issues
         if (static_cast<unsigned char>(c) > 127) return false;
         return DECODE_TABLE[static_cast<unsigned char>(c)] != -1 || c == '=';
     }

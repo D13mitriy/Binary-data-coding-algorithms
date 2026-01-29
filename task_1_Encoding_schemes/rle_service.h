@@ -13,36 +13,33 @@ public:
         std::ofstream out(cfg.output_path, std::ios::binary);
         if (!out) return Result<>::err({0,0, "Error creating output file"});
 
-        // Load file to memory for easy lookahead
+        // Load file to memory
         std::vector<uint8_t> data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
         if (data.empty()) return Result<>::ok();
 
         size_t i = 0;
         while (i < data.size()) {
-            // 1. Try to find a run of identical bytes
+            // Find a sequence of identical bytes
             size_t run_len = 1;
             while ((i + run_len < data.size()) && 
                    (data[i + run_len] == data[i]) && 
                    (run_len < RleStrategy::MAX_RUN_REPEAT)) {
                 run_len++;
             }
-
-            // Case A: REPEAT RUN (>= 2 bytes)
             if (run_len >= 2) {
                 uint8_t header = RleStrategy::make_repeat_header(run_len);
                 out.put(static_cast<char>(header));
                 out.put(static_cast<char>(data[i]));
                 i += run_len;
             } 
-            // Case B: LITERAL RUN
             else {
                 size_t lit_len = 0;
                 size_t j = i;
                 
-                // Accumulate literals until we hit max size OR start of a repeat run
+                // Accumulate literals until we hit max size OR start of a sequence
                 while (j < data.size() && lit_len < RleStrategy::MAX_RUN_LITERAL) {
                     if (j + 1 < data.size() && data[j] == data[j+1]) {
-                        break; // Repeat detected, stop literals
+                        break; // New sequence stop literals
                     }
                     lit_len++;
                     j++;
@@ -69,7 +66,7 @@ public:
             uint8_t header = static_cast<uint8_t>(header_char);
 
             if (RleStrategy::is_repeat_packet(header)) {
-                // REPEAT PACKET
+                // Repeat "packet"
                 size_t count = RleStrategy::get_repeat_length(header);
                 char val;
                 if (!in.get(val)) {
@@ -77,7 +74,7 @@ public:
                 }
                 for (size_t k = 0; k < count; ++k) out.put(val);
             } else {
-                // LITERAL PACKET
+                // End of "packet"
                 size_t count = RleStrategy::get_literal_length(header);
                 std::vector<char> buf(count);
                 in.read(buf.data(), count);

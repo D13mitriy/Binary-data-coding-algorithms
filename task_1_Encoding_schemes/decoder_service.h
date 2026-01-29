@@ -27,20 +27,20 @@ private:
         while (std::getline(in, line)) {
             line_no++;
 
-            // TRIM whitespace/CR from end of line (Fixes "Data after end" warnings on empty lines)
+            // Trim whitespace from end of line
             while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
                 line.pop_back();
             }
 
             if (line.empty() || line[0] == '|') continue;
 
-            // STOP if we found data after the message was marked complete
+            // Stop if we found data after the message was marked complete
             if (message_complete) {
                 std::cerr << "Попередження: Наявні дані після кінця повідомлення\n";
                 return Result<>::ok();
             }
 
-            // --- VALIDATE LINE LENGTH ---
+            // Validate line length
             bool is_last_line_candidate = false;
 
             if (line.length() % 4 != 0) {
@@ -49,15 +49,15 @@ private:
             }
 
             if (expected_len == 0) {
-                // If it looks like a standard line (64 or 76), treat it as the standard
+                // Standard line (64/76)
                 if (line.length() == 64 || line.length() == 76) {
                     expected_len = line.length();
                 } else {
-                    // Otherwise, it must be a short last line
+                    // Short last line(< 64/76) 
                     is_last_line_candidate = true;
                 }
             } else if (line.length() != expected_len) {
-                // Different length than established standard -> must be last line
+                // If length < standard -> we hit the last line
                 is_last_line_candidate = true;
             }
 
@@ -65,7 +65,7 @@ private:
                 message_complete = true;
             }
 
-            // --- PROCESS QUADS ---
+            // --- PROCESS BLOCK(4 byte) ---
             for (size_t i = 0; i < line.length(); i += 4) {
                 char quad[4];
                 for(int k=0; k<4; ++k) quad[k] = line[i+k];
@@ -83,7 +83,7 @@ private:
                         if (k < 2 && quad[2] != '=') return Result<>::err({line_no, i+k+1, "Неправильне використання паддінгу"});
                         if (k < 3 && quad[3] != '=') return Result<>::err({line_no, i+k+1, "Неправильне використання паддінгу"});
 
-                        message_complete = true; // Padding always marks the end
+                        message_complete = true; // Padding marks the end of a file
                     }
                 }
 

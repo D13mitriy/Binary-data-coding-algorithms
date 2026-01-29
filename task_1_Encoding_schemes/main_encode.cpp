@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     auto res = EncoderService::run(cfg);
 
     if (!res.is_ok()) {
-        std::cerr << "Encoder Error: " << res.error().to_string() << "\n";
+        std::cerr << "Encoder: " << res.error().to_string() << "\n";
         return 2;
     }
     
