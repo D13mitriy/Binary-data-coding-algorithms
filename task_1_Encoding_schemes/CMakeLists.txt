@@ -9,10 +9,20 @@ set(HEADERS
     base64_strategy.h 
     encoder_service.h 
     decoder_service.h
+    rle_strategy.h
+    rle_service.h
 )
 
+# Base64 Targets
 add_executable(base64-encode main_encode.cpp ${HEADERS})
 target_include_directories(base64-encode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(base64-decode main_decode.cpp ${HEADERS})
 target_include_directories(base64-decode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# RLE Targets
+add_executable(rle-encode main_rle_encode.cpp ${HEADERS})
+target_include_directories(rle-encode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(rle-decode main_rle_decode.cpp ${HEADERS})
+target_include_directories(rle-decode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
